@@ -1,47 +1,69 @@
-import torch
-from transformers import XLMRobertaTokenizerFast, XLMRobertaForTokenClassification, Trainer, TrainingArguments, DataCollatorForTokenClassification
+import os
 from datasets import load_dataset
-from data_preprocessing import tokenize_and_align_labels
+from transformers import (
+    AutoTokenizer,
+    AutoModelForTokenClassification,
+    TrainingArguments,
+    Trainer,
+    DataCollatorForTokenClassification,
+)
+from data_preprocessing import preprocess_data
+import logging
 
+# Set environment variables
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
-def main():
+# Create necessary directories
+directories = ["./logs", "./results", "./final_model"]
+for directory in directories:
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
-    torch.cuda.set_device(2)
+# Logging setup
+logging.basicConfig(
+    filename="./logs/training.log",
+    filemode="w",
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
 
-    dataset = load_dataset("conll2003")
+# Load CoNLL03 dataset
+dataset = load_dataset("conll2003")
 
-    model_name = "xlm-roberta-base"
-    tokenizer = XLMRobertaTokenizerFast.from_pretrained(model_name)
-    model = XLMRobertaForTokenClassification.from_pretrained(model_name, num_labels=9)
+# Load XLM-RoBERTa and tokenize data
+tokenizer = AutoTokenizer.from_pretrained("xlm-roberta-base")
+tokenized_datasets = dataset.map(lambda x: preprocess_data(x, tokenizer), batched=True)
+model = AutoModelForTokenClassification.from_pretrained("xlm-roberta-base", num_labels=9)
 
-    dataset = dataset.map(lambda x: tokenize_and_align_labels(x, tokenizer), batched=True, remove_columns=dataset["train"].column_names)
+# Define DataCollator
+data_collator = DataCollatorForTokenClassification(tokenizer)
 
-    # Training arguments
-    training_args = TrainingArguments(
-        output_dir='./results',
-        num_train_epochs=3,
-        per_device_train_batch_size=16,
-        per_device_eval_batch_size=64,
-        warmup_steps=500,
-        weight_decay=0.01,
-        logging_dir='./logs',
-        do_train=True,
-        do_eval=True
-    )
+# Training Arguments
+training_args = TrainingArguments(
+    output_dir="./results",
+    save_steps=1000,
+    evaluation_strategy="epoch",
+    learning_rate=2e-5,
+    per_device_train_batch_size=4,
+    per_device_eval_batch_size=4,
+    num_train_epochs=3,
+    weight_decay=0.01,
+    logging_dir="./logs",
+    logging_steps=10,
+    log_level="info",
+)
 
-    data_collator = DataCollatorForTokenClassification(tokenizer)
+# Initialize Trainer
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=tokenized_datasets["train"],
+    eval_dataset=tokenized_datasets["validation"],
+    tokenizer=tokenizer,
+    data_collator=data_collator,
+)
 
-    # Initialize trainer
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        data_collator=data_collator,
-        train_dataset=dataset["train"],
-        eval_dataset=dataset["validation"]
-    )
-
-    trainer.train()
-
-
-if __name__ == "__main__":
-    main()
+# Train/save model
+trainer.train()
+trainer.save_model("./final_model")
