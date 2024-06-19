@@ -1,13 +1,13 @@
 from data_preprocessing import replace_tags_with_mask
 
-tags_to_replace = [
-    "I-ORG",
-    "B-LOC",
-    "I-PER",
-    "I-LOC",
-    "I-MISC",
-]
+tags = ["I-PER", "B-PER", "I-LOC", "B-LOC", "I-ORG", "B-ORG", "I-MISC", "B-MISC", "O"]
+subsets = ["test", "train", "valid"]
 
-replace_tags_with_mask("data/conll03_test.txt", "data/masked_conll03_test.txt", tags_to_replace)
-replace_tags_with_mask("data/conll03_train.txt", "data/masked_conll03_train.txt", tags_to_replace)
-replace_tags_with_mask("data/conll03_valid.txt", "data/masked_conll03_valid.txt", tags_to_replace)
+for subset in subsets:
+    for tag in tags:
+        replace_tags_with_mask(
+            file_path=f"data/conll03/{subset}/{subset}.txt",
+            tag=tag,
+            output_path=f"data/conll03/{subset}/{subset}_{tag}_masked.txt",
+            mask_token="[MASK]",
+        )

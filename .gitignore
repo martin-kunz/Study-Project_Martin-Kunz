@@ -1,5 +1,16 @@
 __pycache__/
 .idea/
-.logs/
-.results/
-.final_model/
+logs/
+# Ignore
+results/*/*.txt
+# Ignore masked files and top prediction files
+data/*/*/*masked*
+
+final_model/
+
+checkpoints/
+
+xlm-roberta/
+
+# Script for debugging, etc.
+debugging.py

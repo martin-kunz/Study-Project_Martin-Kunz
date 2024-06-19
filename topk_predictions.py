@@ -1,36 +1,43 @@
 from transformers import XLMRobertaTokenizer, XLMRobertaForMaskedLM
-import pandas as pd
-from data_preprocessing import get_top_predictions
+from transformers import DistilBertTokenizer, DistilBertForMaskedLM
+from data_preprocessing import process_file
+import os
+import torch
 
 
-def main(file):
+def main():
+
+    base_dir = "data/conll03"
+    subsets = ["train", "valid", "test"]
+
+    if torch.cuda.is_available():
+        device = "cuda"
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+        print(f"Using device: {device}")
+        torch.cuda.set_device(0)
+    else:
+        device = "cpu"
+        print("CUDA not available, using CPU")
 
     # Tokenizer and model
-    tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-base")
-    model = XLMRobertaForMaskedLM.from_pretrained("xlm-roberta-base")
+    # tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-base")
+    # model = XLMRobertaForMaskedLM.from_pretrained("xlm-roberta-base")
+    tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+    model = DistilBertForMaskedLM.from_pretrained("distilbert-base-uncased")
+    print(model)
+    model.to(device)
 
-    # Read data from file
-    with open(f"data/{file}.txt", "r", encoding="utf-8") as f:
-        data = f.readlines()
+    # Iterate over train, valid, and test directories
+    for subset in subsets:
+        subset_dir = os.path.join(base_dir, subset)
+        output_dir = subset_dir
 
-    # Process each sentence and get predictions/probabilities
-    results = []
-    for sentence in data:
-        predictions, probabilities = get_top_predictions(sentence, tokenizer, model)
-        results.append({"sentence": sentence.strip(), "top_5_predictions": predictions, "probabilities": probabilities})
-
-    # Convert results to pandas.DataFrame
-    result_df = pd.DataFrame(results)
-
-    # Display first 10 results
-    print(result_df.head(10))
-
-    # Save results as .csv file
-    output_file_path = f"data/top_predictions_{file}.csv"
-    result_df.to_csv(output_file_path, index=False)
+        # Process each file in the subset directory
+        for file_name in os.listdir(subset_dir):
+            if file_name.endswith(".txt") and "masked" in file_name:
+                file_path = os.path.join(subset_dir, file_name)
+                process_file(file_path, output_dir, device, tokenizer, model)
 
 
 if __name__ == "__main__":
-    main("masked_conll03_test")
-    main("masked_conll03_train")
-    main("masked_conll03_valid")
+    main()

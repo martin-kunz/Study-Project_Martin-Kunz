@@ -1,5 +1,8 @@
+import os
 import torch
 import torch.nn.functional as F
+import pandas as pd
+from tqdm import tqdm
 
 
 def preprocess_data(examples, tokenizer):
@@ -36,57 +39,66 @@ def preprocess_data(examples, tokenizer):
     return tokenized_inputs
 
 
-def replace_tags_with_mask(input_file, output_file, tags_to_mask, mask_token="<mask>"):
+def replace_tags_with_mask(file_path: str, tag: str, output_path: str, mask_token: str = "<mask>") -> None:
     """
-    Replaces words with specified NER tags with a mask token and saves the sentences in a single line without additional information.
+    Reads a file, masks words with a specified tag, splits sentences if multiple tags are found,
+    and writes the result to an output file.
 
-    :param input_file: Path to the input file in CoNLL03 format.
-    :param output_file: Path to the output file where masked sentences will be saved.
-    :param tags_to_mask: List of NER tags to be replaced with the mask token.
-    :param mask_token: The token to replace specified Named Entity tags with. Default is "<mask>".
+    :param file_path: The path to the input file.
+    :param tag: The tag to be masked.
+    :param output_path: The path to the output file.
+    :param mask_token: The token used to replace the masked words. Default is "<mask>".
     :return: None
     """
-    with open(input_file, "r", encoding="utf-8") as file:
-        lines = file.readlines()
+    with open(file_path, "r") as file:
+        content = file.read()
 
-    sentences = []
-    current_sentence = []
+    sentences = content.split("\n\n")
+    result = []
 
-    for line in lines:
-        if line.strip() and not line.startswith("-DOCSTART-"):
-            parts = line.split()
-            if len(parts) == 4:
-                word, pos, chunk, ne_tag = parts
-                if ne_tag in tags_to_mask:
-                    word = mask_token
-                current_sentence.append(word)
-            else:
-                if current_sentence:
-                    sentences.append(" ".join(current_sentence))
-                    current_sentence = []
-        else:
-            if current_sentence:
-                sentences.append(" ".join(current_sentence))
-                current_sentence = []
+    for sentence in sentences:
+        words = sentence.split("\n")
+        masked_sentence = []
+        tag_count = 0
+        for word in words:
+            if word:
+                parts = word.split()
+                if len(parts) > 3 and parts[3] == tag:
+                    tag_count += 1
 
-    if current_sentence:
-        sentences.append(" ".join(current_sentence))
+        if tag_count > 0:
+            split_triggered = False
+            for word in words:
+                if word:
+                    parts = word.split()
+                    if len(parts) > 3 and parts[3] == tag:
+                        if split_triggered:
+                            result.append(" ".join(masked_sentence))
+                            masked_sentence = [mask_token]
+                        else:
+                            masked_sentence.append(mask_token)
+                            split_triggered = True
+                    else:
+                        masked_sentence.append(parts[0])
+            if masked_sentence:
+                result.append(" ".join(masked_sentence))
 
-    with open(output_file, "w", encoding="utf-8") as file:
-        for sentence in sentences:
-            file.write(sentence + "\n")
+    with open(output_path, "w") as output_file:
+        for sentence in result:
+            output_file.write(sentence + "\n")
 
 
-def get_top_predictions(sentence, tokenizer, model):
+def get_top_predictions(sentence, tokenizer, model, device):
     """
     Get the top 5 predictions and their probabilities for masked tokens in a sentence.
 
     :param sentence: The input sentence containing masked tokens.
     :param tokenizer: The tokenizer used to process the text.
     :param model: The pre-trained model used for making predictions.
+    :param device: The device to run the model on (cpu or cuda).
     :return: A tuple containing two lists: top 5 predictions and their probabilities for each masked token.
     """
-    inputs = tokenizer(sentence, return_tensors="pt")
+    inputs = tokenizer(sentence, return_tensors="pt").to(device)
     mask_token_indices = torch.where(inputs["input_ids"] == tokenizer.mask_token_id)[1]
 
     if len(mask_token_indices) == 0:
@@ -106,9 +118,44 @@ def get_top_predictions(sentence, tokenizer, model):
         top_5_tokens = torch.topk(softmax_logits, 5, dim=-1).indices.tolist()
         top_5_probs = torch.topk(softmax_logits, 5, dim=-1).values.tolist()
 
-        # Convert token ids to words and store results
+        # Convert token ids to words and store checkpoints
         top_5_words = [tokenizer.decode([token]).strip() for token in top_5_tokens]
         top_5_predictions.append(top_5_words)
         top_5_probabilities.append(top_5_probs)
 
     return top_5_predictions, top_5_probabilities
+
+
+def process_file(file_path, output_dir, device, tokenizer, model):
+    """
+
+    :param file_path:
+    :param output_dir:
+    :param device:
+    :param tokenizer:
+    :param model:
+    :return:
+    """
+    # Read data from file
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = f.readlines()
+
+    # Process each sentence and get predictions/probabilities
+    results = []
+    for sentence in tqdm(data, desc=f"Processing {os.path.basename(file_path)}"):
+        predictions, probabilities = get_top_predictions(sentence, tokenizer, model, device)
+        results.append(
+            {
+                "sentence": sentence.strip(),
+                "top_5_predictions": predictions,
+                "probabilities": probabilities,
+            }
+        )
+
+    # Convert results to pandas.DataFrame
+    result_df = pd.DataFrame(results)
+
+    # Save results as .csv file
+    output_file_name = f"top_predictions_{os.path.basename(file_path).replace('.txt', '')}.csv"
+    output_file_path = os.path.join(output_dir, output_file_name)
+    result_df.to_csv(output_file_path, index=False)

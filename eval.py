@@ -79,7 +79,7 @@ label_list = dataset["train"].features["ner_tags"].feature.names
 
 # Training Arguments
 training_args = TrainingArguments(
-    output_dir="./results",
+    output_dir="./checkpoints",
     per_device_eval_batch_size=4,
     logging_dir="./logs",
     log_level="info",
@@ -98,6 +98,6 @@ trainer = Trainer(
 # Evaluate model
 evaluation_results = trainer.evaluate()
 
-# Log/print evaluation results
+# Log/print evaluation checkpoints
 logging.info(evaluation_results)
 print(evaluation_results)
