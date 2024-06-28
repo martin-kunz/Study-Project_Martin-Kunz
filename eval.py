@@ -27,7 +27,7 @@ else:
 
 # Logging setup
 logging.basicConfig(
-    filename="./logs/evaluation.log",
+    filename="./logs/evaluation_new-weights.log",
     filemode="w",
     format="%(asctime)s - %(levelname)s - %(message)s",
     level=logging.INFO,
@@ -61,11 +61,11 @@ def compute_metrics(p):
 dataset = load_dataset("conll2003", trust_remote_code=True)
 
 # Load XLM-RoBERTa and tokenize data
-tokenizer = AutoTokenizer.from_pretrained("xlm-roberta-base")
+tokenizer = AutoTokenizer.from_pretrained("./new_model")
 tokenized_datasets = dataset.map(lambda x: preprocess_data(x, tokenizer), batched=True)
 
 # Load trained model
-model = AutoModelForTokenClassification.from_pretrained("./final_model")
+model = AutoModelForTokenClassification.from_pretrained("./new_model")
 model.to(device)
 
 # Define DataCollator

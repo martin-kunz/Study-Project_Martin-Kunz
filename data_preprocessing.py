@@ -156,6 +156,6 @@ def process_file(file_path, output_dir, device, tokenizer, model):
     result_df = pd.DataFrame(results)
 
     # Save results as .csv file
-    output_file_name = f"top_predictions_{os.path.basename(file_path).replace('.txt', '')}.csv"
+    output_file_name = f"predictions_{os.path.basename(file_path).replace('.txt', '')}.csv"
     output_file_path = os.path.join(output_dir, output_file_name)
     result_df.to_csv(output_file_path, index=False)

@@ -61,7 +61,7 @@ def process_all_files(base_dir):
                 total_predictions = sum(prediction_counts.values())
 
                 # Output file path
-                output_file_path = os.path.join(output_dir, f"prediction_counts_{file_name.replace('.csv', '.txt')}")
+                output_file_path = os.path.join(output_dir, f"count_{file_name.replace('.csv', '.txt')}")
 
                 # Save results to the text file
                 save_results_to_txt(prediction_counts, total_predictions, output_file_path)

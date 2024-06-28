@@ -6,6 +6,7 @@ results/*/*.txt
 # Ignore masked files and top prediction files
 data/*/*/*masked*
 
+new_model/
 final_model/
 
 checkpoints/

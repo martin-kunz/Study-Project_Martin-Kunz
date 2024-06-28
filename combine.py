@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 
-def read_file_safely(file_path):
+def read_file(file_path):
     """
 
     :param file_path:
@@ -24,26 +24,16 @@ def combine_txt_files(directory):
     :param directory:
     :return:
     """
-    tags = [
-        "B-PER",
-        "I-PER",
-        "B-LOC",
-        "I-LOC",
-        "B-ORG",
-        "I-ORG",
-        "B-MISC",
-        "I-MISC",
-        "O",
-    ]
+    tags = ["I-PER", "B-PER", "I-LOC", "B-LOC", "I-ORG", "B-ORG", "I-MISC", "B-MISC", "O"]
     combined_data = {}
 
     for tag in tags:
         file_path = os.path.join(
             directory,
-            f"prediction_counts_top_predictions_{directory.split('/')[-1]}_{tag}_masked.txt",
+            f"count_predictions_{directory.split('/')[-1]}_{tag}_masked.txt",
         )
         if os.path.exists(file_path):
-            combined_data[tag] = read_file_safely(file_path)
+            combined_data[tag] = read_file(file_path)
         else:
             combined_data[tag] = pd.DataFrame(columns=["Prediction", "Occ.", "%"])
 
@@ -65,7 +55,7 @@ def combine_txt_files(directory):
 
     final_df = pd.DataFrame(data_rows, columns=header_row_1)
 
-    output_file = os.path.join(directory, f"combined_predictions_{directory.split('/')[-1]}.tsv")
+    output_file = os.path.join(directory, f"top_predictions_{directory.split('/')[-1]}.tsv")
     with open(output_file, "w") as f:
         f.write("\t".join(header_row_1) + "\n")
         f.write("\t".join(header_row_2) + "\n")

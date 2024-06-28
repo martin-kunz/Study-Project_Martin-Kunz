@@ -8,6 +8,6 @@ for subset in subsets:
         replace_tags_with_mask(
             file_path=f"data/conll03/{subset}/{subset}.txt",
             tag=tag,
-            output_path=f"data/conll03/{subset}/{subset}_{tag}_masked.txt",
+            output_path=f"data/conll03/{subset}/{tag}_masked.txt",
             mask_token="[MASK]",
         )
