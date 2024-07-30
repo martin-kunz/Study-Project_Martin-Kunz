@@ -12,7 +12,15 @@ print(model)
 
 # Define labels and their most common prediction
 labels = ["I-PER", "B-PER", "I-LOC", "B-LOC", "I-ORG", "B-ORG", "I-MISC", "B-MISC", "O"]
-tag_prediction = {"I-PER": "Smith", "B-PER": "John", "I-LOC": "York", "B-LOC": "London", "I-ORG": "The", "B-ORG": "FC", "I-MISC": "Cup", "B-MISC": "World", "O": "by"}
+tag_prediction = {"I-PER": "Smith",
+                  "B-PER": "John",
+                  "I-LOC": "York",
+                  "B-LOC": "London",
+                  "I-ORG": "The",
+                  "B-ORG": "FC",
+                  "I-MISC": "Cup",
+                  "B-MISC": "World",
+                  "O": "by"}
 
 # Convert words to token IDs
 token_ids = {}
