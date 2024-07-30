@@ -1,16 +1,11 @@
 import os
 from datasets import load_dataset, load_metric
-from transformers import (
-    AutoTokenizer,
-    AutoModelForTokenClassification,
-    Trainer,
-    DataCollatorForTokenClassification,
-    TrainingArguments,
-)
+from transformers import AutoTokenizer, AutoModelForTokenClassification, Trainer, DataCollatorForTokenClassification, TrainingArguments, pipeline
 from data_preprocessing import preprocess_data
 import logging
 import torch
 import numpy as np
+from tqdm import tqdm
 
 # Set environment variables
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -101,3 +96,43 @@ evaluation_results = trainer.evaluate()
 # Log/print evaluation checkpoints
 logging.info(evaluation_results)
 print(evaluation_results)
+
+
+# Load the token classification pipeline
+nlp = pipeline("ner", model=model, tokenizer=tokenizer, device=0 if device == "cuda" else -1)
+
+
+# Extract sentences and their corresponding predictions
+def get_sentences_with_predictions(dataset, nlp_pipeline, label_list):
+    results = []
+    for sentence in tqdm(dataset["test"], desc="Processing sentences"):
+        tokens = sentence["tokens"]
+        ner_tags = [label_list[tag] for tag in sentence["ner_tags"]]
+        ner_results = nlp_pipeline(tokens)
+        predictions = []
+        for token_result in ner_results:
+            if isinstance(token_result, list):
+                entity = ""
+                for sub_token_result in token_result:
+                    if isinstance(sub_token_result, dict):
+                        entity = sub_token_result["entity"]
+                predictions.append(entity)
+            elif isinstance(token_result, dict):
+                predictions.append(token_result["entity"])
+        # Map numeric labels to human-readable labels
+        readable_predictions = [label_list[int(label.split("_")[-1])] for label in predictions]
+        results.append((tokens, readable_predictions, ner_tags))
+    return results
+
+
+# Get sentences with predictions
+sentences_with_predictions = get_sentences_with_predictions(dataset, nlp, label_list)
+
+# Save the results to a file
+output_file = "ner_predictions.txt"
+with open(output_file, "w") as f:
+    for tokens, predictions, ner_tags in sentences_with_predictions:
+        f.write(f"Tokens: {' '.join(tokens)}\n")
+        f.write(f"Predictions: {' '.join(predictions)}\n")
+        f.write(f"True Labels: {' '.join(ner_tags)}\n")
+        f.write("\n")
