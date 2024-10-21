@@ -1,0 +1,7 @@
+input_text,predicted_word,probabilities
+John,Wayne,[0.20751739 0.06949954 0.05924259]
+John Smith,</s>,[0.23165898 0.13051029 0.07724547]
+John Smith lives,.,[0.24033931 0.17593798 0.06105449]
+John Smith lives in,London,[0.11800266 0.05580817 0.05280285]
+John Smith lives in New,York,[0.6608969  0.24123095 0.06099902]
+John Smith lives in New Mexico,.,[0.9023096  0.07007088 0.00805505]

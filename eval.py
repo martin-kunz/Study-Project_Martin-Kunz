@@ -7,6 +7,9 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
+name = "./rand_model"
+log_path = "./logs/evaluation_rand-weights.log"
+
 # Set environment variables
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -22,7 +25,7 @@ else:
 
 # Logging setup
 logging.basicConfig(
-    filename="./logs/evaluation_new-weights.log",
+    filename=log_path,
     filemode="w",
     format="%(asctime)s - %(levelname)s - %(message)s",
     level=logging.INFO,
@@ -56,11 +59,11 @@ def compute_metrics(p):
 dataset = load_dataset("conll2003", trust_remote_code=True)
 
 # Load XLM-RoBERTa and tokenize data
-tokenizer = AutoTokenizer.from_pretrained("./new_model")
+tokenizer = AutoTokenizer.from_pretrained(name)
 tokenized_datasets = dataset.map(lambda x: preprocess_data(x, tokenizer), batched=True)
 
 # Load trained model
-model = AutoModelForTokenClassification.from_pretrained("./new_model")
+model = AutoModelForTokenClassification.from_pretrained(name)
 model.to(device)
 
 # Define DataCollator
