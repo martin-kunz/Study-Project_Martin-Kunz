@@ -11,7 +11,6 @@ from data_preprocessing import preprocess_data
 import logging
 
 model_name = "xlm-roberta-base"
-# model_name = "distilbert-base-uncased"
 
 # Set environment variables
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -39,6 +38,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 tokenized_datasets = dataset.map(lambda x: preprocess_data(x, tokenizer), batched=True)
 model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=9)
 print(model)
+
 # Define DataCollator
 data_collator = DataCollatorForTokenClassification(tokenizer)
 
@@ -47,10 +47,10 @@ training_args = TrainingArguments(
     output_dir="./checkpoints",
     save_steps=1000,
     evaluation_strategy="epoch",
-    learning_rate=2e-5,  # e6
+    learning_rate=2e-5,
     per_device_train_batch_size=4,
     per_device_eval_batch_size=4,
-    num_train_epochs=3,  # evtl höher
+    num_train_epochs=3,
     weight_decay=0.01,
     logging_dir="./logs",
     logging_steps=10,

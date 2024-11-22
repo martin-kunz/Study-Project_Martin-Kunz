@@ -1,5 +1,4 @@
 from transformers import XLMRobertaTokenizer, XLMRobertaForMaskedLM
-from transformers import DistilBertTokenizer, DistilBertForMaskedLM
 from data_preprocessing import process_file
 import os
 import torch
@@ -20,10 +19,8 @@ def main():
         print("CUDA not available, using CPU")
 
     # Tokenizer and model
-    # tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-base")
-    # model = XLMRobertaForMaskedLM.from_pretrained("xlm-roberta-base")
-    tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
-    model = DistilBertForMaskedLM.from_pretrained("distilbert-base-uncased")
+    tokenizer = XLMRobertaTokenizer.from_pretrained("xlm-roberta-base")
+    model = XLMRobertaForMaskedLM.from_pretrained("xlm-roberta-base")
     print(model)
     model.to(device)
 
