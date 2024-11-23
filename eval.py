@@ -15,7 +15,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # Check if CUDA is available and set the device
 if torch.cuda.is_available():
     device = "cuda"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
     print(f"Using device: {device}")
     torch.cuda.set_device(0)
 else:
@@ -77,7 +77,7 @@ label_list = dataset["train"].features["ner_tags"].feature.names
 # Training Arguments
 training_args = TrainingArguments(
     output_dir="./checkpoints",
-    per_device_eval_batch_size=4,
+    per_device_eval_batch_size=6,
     logging_dir="./logs",
     log_level="info",
 )
