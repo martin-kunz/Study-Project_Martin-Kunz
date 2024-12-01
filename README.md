@@ -10,7 +10,7 @@ This project aims to investigate Named Entity Recognition (NER) using a modified
 The key steps include processing the CoNLL-2003 dataset, fine-tuning the model on this data and then analyzing the predictions after modifying the prediction head. In addition to conducting the baseline experiment, specific methods were implemented to identify the most generic tokens for each entity class and integrate them into the new classification layer.<br>
 The individual scripts are then explained in detail, including data preprocessing, model initialization, modification of the prediction head and evaluation. These explanations are intended to make the structure and workflow of the project comprehensible.
 
-### <ins>Scripts</ins>
+### <ins>Scripts and Data</ins>
 - ```masking.py``` - Replaces tokens in a data set that are tagged with certain NER tags with a placeholder (`[MASK]`). This script creates a masked output for each tag for the test, train and validation datasets.
 - ```data_preprocessing.py``` - Contains functions for preparing data for NER tasks. The script tokenizes texts, matches NER tags to tokens and provides methods to replace specific tags with masks. Predictions for masked tokens can also be extracted.
 - ```topk_predictions.py``` - Calculates the top-k predictions for masked tokens in a text. The script uses the XLM-RoBERTa model to generate predictions for masked sentences in the training, validation and test datasets.
@@ -21,3 +21,5 @@ The individual scripts are then explained in detail, including data preprocessin
 - ```train_xlmroberta.py``` - Trains an XLM-RoBERTa model for NER tasks with the CoNLL03 dataset. It defines training arguments, processes the data and saves the trained model as well as checkpoints and logs.
 - ```replace_prediction_head.py``` - Replaces the classification head of an XLM-RoBERTa model so that it provides static predictions for each tag. This is used to analyze the model parameters and the influence of specific initializations.
 - ```eval.py``` - Evaluates a trained NER model using the CoNLL03 dataset. It calculates metrics such as Precision, Recall, F1-Score and Accuracy. The script uses the `Trainer` of HuggingFace for the evaluation and saves the results in a log file.
+- ```/data``` - Contains the data sets used to train the model.
+- ```/masking_results``` - Contains the results for the top predictions of each of the nine tags of the train, valid and test dataset.
